@@ -1,4 +1,71 @@
+import os
+from socket import socket, SOCK_DGRAM, AF_INET, timeout
+
+MAX_PACKET_SIZE = 16384
+DATA_LENGTH = 1024
+SEP = '\r\n'
+
+def add_line(line, message):
+  message += line + SEP
+  return message
+
+def initial_message(name, length):
+  message = ''
+  message = add_line('UPLOAD', message)
+  message = add_line(name, message)
+  message = add_line(str(length), message)
+  
+  return message
+
+def upload_message(name, offset, file):
+  message = ''
+  message = add_line('UPLOAD', message)
+  message = add_line(name, message)
+  message = add_line(str(offset), message)
+  data = file.read(DATA_LENGTH)
+  message = add_line("DATA", message)
+  message = message.encode() + data
+  return message, len(data)
+
 def upload_file(server_address, src, name):
-  # TODO: Implementar UDP upload_file client
-  print('UDP: upload_file({}, {}, {})'.format(server_address, src, name))
-  pass
+  print('UDP: upload_file({}, {}, {})'.format(server_address, src, name)) 
+
+  if not os.path.isfile(src):
+    print("Error: el archivo no existe")
+    return
+
+  clientSocket = socket(AF_INET, SOCK_DGRAM)
+
+  total_length = os.path.getsize(src)  
+  total_uploaded = 0
+  f = open(src,'rb')
+  
+  first_acked = False
+
+  total_uploaded = 0
+  while total_uploaded < total_length:
+    if not first_acked:
+      to_send = initial_message(name, total_length).encode()
+      data_length = 0
+    else:
+      to_send, data_length = upload_message(name, total_uploaded, f)
+
+    total_uploaded += data_length
+    acked = False
+    timeouts = 0
+    while not acked:
+      print(to_send)
+      clientSocket.sendto(to_send, server_address)
+      sender_address = None
+      while sender_address != server_address:
+        try:
+          raw_data, sender_address = clientSocket.recvfrom(MAX_PACKET_SIZE)
+        except timeout:
+          timeouts += 1
+          break
+      if sender_address != server_address:
+        continue
+      headers = raw_data.decode().split(SEP)
+      if int(headers[2]) == total_uploaded:
+        first_acked = True
+        acked = True
