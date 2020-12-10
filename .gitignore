@@ -1,2 +1,6 @@
 __pycache__
 .vscode
+
+storage
+storage-client
+test-files
