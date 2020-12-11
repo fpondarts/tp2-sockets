@@ -32,6 +32,16 @@ def download_message(file, filename, offset, total_length, max_data_length):
     return message, len(data)
 
 
+def download_initial_message(filename, total_length):
+    message = ''
+    message = add_line('DOWNLOAD', message)
+    message = add_line(filename, message)
+    data = str(total_length).encode()
+    message = add_line("DATA", message)
+    message = message.encode() + data
+    return message
+
+
 def handle_file_reception(a_socket, an_address, filename, total_length, storage_dir):
     try:
         path = storage_dir + '/' + filename
@@ -42,9 +52,6 @@ def handle_file_reception(a_socket, an_address, filename, total_length, storage_
         a_socket.sendto(error_message.encode(), an_address)
         return
 
-    # first_ack = ack_message(filename, 0)
-    # a_socket.sendto(first_ack.encode(), an_address)
-    # print(first_ack)
     total_received = 0
 
     while total_received < total_length:
@@ -58,43 +65,26 @@ def handle_file_reception(a_socket, an_address, filename, total_length, storage_
     a_socket.close()
 
 
-def handle_file_sending(a_socket, an_address, filename, storage_dir):
+def handle_file_sending(a_socket, filename, storage_dir):
     path = storage_dir + '/' + filename
     if not os.path.isfile(path):
-        a_socket.sendto(ERROR_MESSAGE.encode(), an_address)
+        a_socket.sendto(ERROR_MESSAGE.encode())
         return
 
     total_length = os.path.getsize(path)
     f = open(path, 'rb')
+
+    a_socket.send(download_initial_message(filename, total_length))
     total_sent = 0
+
     while total_sent < total_length:
-        to_send, data_length = download_message(f, filename, total_sent, total_length, DATA_LENGTH)
-        total_sent += data_length
-        acked = False
-        timeouts = 0
+        data = f.read(DATA_LENGTH)
+        a_socket.send(data)
 
-        while not acked and timeouts < 3:
-            print("Envío")
-            a_socket.sendto(to_send, an_address)
-            print("Recibo ack")
-            sender_address = None
+        total_sent += len(data)
 
-            while sender_address != an_address:
-                try:
-                    raw_data, sender_address = a_socket.recvfrom(MAX_PACKET_SIZE)
-                except timeout:
-                    timeouts += 1
-                    break
-
-            if sender_address != an_address:
-                continue
-
-            message = raw_data.decode().split(SEP)
-            if int(message[1]) == total_sent:
-                acked = True
-        if not acked:
-            break
     f.close()
+    a_socket.close()
 
 
 def start_server(server_address, storage_dir):
@@ -118,6 +108,7 @@ def start_server(server_address, storage_dir):
 
         raw_data = connection_socket.recv(MAX_PACKET_SIZE)
         message = raw_data.decode()
+        print('message', message)
         headers = message.split(SEP)
         is_upload = headers[0].upper() == 'UPLOAD'
         file_name = headers[1]
@@ -132,4 +123,4 @@ def start_server(server_address, storage_dir):
 
             handle_file_reception(connection_socket, client_address, file_name, total_length, storage_dir)
         else:  # Download
-            handle_file_sending(connection_socket, client_address, file_name, storage_dir)
+            handle_file_sending(connection_socket, file_name, storage_dir)

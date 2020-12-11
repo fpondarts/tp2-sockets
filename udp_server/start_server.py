@@ -1,5 +1,4 @@
 import os
-import time
 from socket import socket, timeout, AF_INET, SOCK_DGRAM
 from constants.constants import HEADER_SEP, MAX_PACKET_SIZE, \
                       TIMEOUT_SECONDS, MAX_TIMEOUTS

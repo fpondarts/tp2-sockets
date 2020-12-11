@@ -1,7 +1,7 @@
 import os
 from socket import socket, AF_INET, SOCK_DGRAM, timeout
 from common.common import ack_message, add_header
-MAX_PACKET_SIZE = 16384
+MAX_PACKET_SIZE = 4096
 SEP = '\r\n'
 
 
