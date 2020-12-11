@@ -1,4 +1,3 @@
-import os
 from socket import socket, AF_INET, SOCK_DGRAM, timeout
 from common.common import ack_message, add_header, log, handle_fin_receptor
 MAX_PACKET_SIZE = 4096

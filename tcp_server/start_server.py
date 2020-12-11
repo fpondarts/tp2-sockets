@@ -11,6 +11,7 @@ def add_line(line, message):
     message += line + SEP
     return message
 
+
 def download_initial_message(filename, total_length):
     message = ''
     message = add_line('DOWNLOAD', message)
