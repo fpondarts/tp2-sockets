@@ -1,10 +1,29 @@
 import os
+import signal
 from socket import socket, AF_INET, SOCK_STREAM
+
+server_socket = None
+connection_socket = None
 
 SEP = '\r\n'
 ERROR_MESSAGE = 'ERROR' + SEP
 MAX_PACKET_SIZE = 4096
 DATA_LENGTH = 1024
+
+
+def signal_handler(_, __):
+    if server_socket is None:
+        exit(0)
+    server_socket.close()
+
+    if connection_socket is None:
+        exit(0)
+    connection_socket.close()
+
+    exit(0)
+
+
+signal.signal(signal.SIGINT, signal_handler)
 
 
 def add_line(line, message):
@@ -73,6 +92,9 @@ def start_server(server_address, storage_dir):
 
     if not os.path.isdir(storage_dir):
         os.makedirs(storage_dir)
+
+    global server_socket
+    global connection_socket
 
     server_socket = socket(AF_INET, SOCK_STREAM)
     server_socket.bind(server_address)

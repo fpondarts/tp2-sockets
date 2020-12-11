@@ -1,7 +1,20 @@
 from socket import socket, AF_INET, SOCK_STREAM
+import signal
 
 MAX_PACKET_SIZE = 4096
 SEP = '\r\n'
+client_socket = None
+
+
+def signal_handler(_, __):
+    if client_socket is None:
+        exit(0)
+
+    client_socket.close()
+    exit(0)
+
+
+signal.signal(signal.SIGINT, signal_handler)
 
 
 def add_line(line, message):
@@ -19,6 +32,9 @@ def initial_message(filename, length):
 
 def download_file(server_address, name, dst):
     print('TCP: download_file({}, {}, {})'.format(server_address, name, dst))
+
+    global client_socket
+
     client_socket = socket(AF_INET, SOCK_STREAM)
     client_socket.connect(server_address)
 

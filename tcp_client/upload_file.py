@@ -1,9 +1,23 @@
 import os
+import signal
 from socket import socket, SOCK_STREAM, AF_INET
 
 MAX_PACKET_SIZE = 4096
 DATA_LENGTH = 1024
 SEP = '\r\n'
+
+client_socket = None
+
+
+def signal_handler(_, __):
+    if client_socket is None:
+        exit(0)
+
+    client_socket.close()
+    exit(0)
+
+
+signal.signal(signal.SIGINT, signal_handler)
 
 
 def add_line(line, message):
@@ -37,6 +51,8 @@ def upload_file(server_address, src, name):
     if not os.path.isfile(src):
         print("Error: el archivo no existe")
         return
+
+    global client_socket
 
     client_socket = socket(AF_INET, SOCK_STREAM)
     client_socket.connect(server_address)
