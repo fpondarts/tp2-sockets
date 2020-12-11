@@ -1,6 +1,6 @@
 import os
 from socket import socket, SOCK_DGRAM, AF_INET, timeout
-from common.common import add_header, log
+from common.common import add_header, log, handle_fin_emisor
 from constants.constants import \
     MAX_TIMEOUTS, MAX_PACKET_SIZE, HEADER_SEP, TIMEOUT_SECONDS
 
@@ -80,5 +80,7 @@ def upload_file(server_address, src, name, verbose):
                 if int(headers[2]) == total_uploaded:
                     first_acked = True
                     acked = True
+    handle_fin_emisor(client_socket, server_address,
+                      name, total_length, verbose)
     print("Fin de transmisión")
     f.close()

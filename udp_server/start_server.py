@@ -2,7 +2,8 @@ import os
 from socket import socket, timeout, AF_INET, SOCK_DGRAM
 from constants.constants import HEADER_SEP, MAX_PACKET_SIZE, \
                       TIMEOUT_SECONDS, MAX_TIMEOUTS
-from common.common import add_header, ack_message, log
+from common.common import add_header, ack_message, log,\
+    handle_fin_emisor, handle_fin_receptor
 
 ERROR_MESSAGE = 'ERROR' + HEADER_SEP
 DATA_LENGTH = 1024
@@ -66,6 +67,7 @@ def handle_file_reception(a_socket, an_address, filename,
         log("Se envia ACK con offset {}".format(total_received), verbose)
         a_socket.sendto(ack_message(filename,
                         total_received).encode(), an_address)
+    handle_fin_receptor(a_socket, an_address, filename, total_length, verbose)
     print("Fin de recepción")
 
 
@@ -101,10 +103,10 @@ def handle_file_sending(a_socket, an_address,
                     raw_data, sender_address = a_socket.\
                         recvfrom(MAX_PACKET_SIZE)
                 except timeout:
-                    log("Timeout nro {}".format(timeouts),
-                        verbose)
                     send_message = True
                     timeouts += 1
+                    log("Timeout nro {}".format(timeouts),
+                        verbose)
                     break
 
             if sender_address != an_address:
@@ -119,6 +121,7 @@ def handle_file_sending(a_socket, an_address,
                     acked = True
         if not acked:
             break
+    handle_fin_emisor(a_socket, an_address, filename, total_length, verbose)
     print("Fin de transmisión")
     f.close()
 

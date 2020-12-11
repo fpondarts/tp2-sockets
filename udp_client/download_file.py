@@ -1,6 +1,6 @@
 import os
 from socket import socket, AF_INET, SOCK_DGRAM, timeout
-from common.common import ack_message, add_header, log
+from common.common import ack_message, add_header, log, handle_fin_receptor
 MAX_PACKET_SIZE = 4096
 SEP = '\r\n'
 
@@ -27,7 +27,7 @@ def download_file(server_address, name, dst, verbose):
                 .recvfrom(MAX_PACKET_SIZE)
         except timeout:
             if verbose:
-                print("Timeout")
+                log("Timeout", verbose)
             if total_received == 0:
                 client_socket.sendto(initial_message(name).encode(),
                                      server_address)
@@ -47,8 +47,6 @@ def download_file(server_address, name, dst, verbose):
         data = headers_and_data[1]
 
         offset = int(headers[2])
-        log("Recibido paquete con offset {}".format(offset),
-            verbose)
         if total_received == 0:
             total_length = int(headers[3])
 
@@ -59,11 +57,16 @@ def download_file(server_address, name, dst, verbose):
             continue
         f.write(data)
         total_received += len(data)
+        log("Recibido paquete con offset {} y {} bytes de datos"
+            .format(offset, len(data)), verbose)
         client_socket.sendto(ack_message(name, total_received).encode(),
                              server_address)
         log("Envío ACK con offset {}".format(total_received), verbose)
 
         print("Porcentaje recibido: {}%".format(
             total_received / total_length * 100))
+
+    handle_fin_receptor(client_socket, server_address, name,
+                        total_length, verbose)
     print("Fin de recepción")
     f.close()
