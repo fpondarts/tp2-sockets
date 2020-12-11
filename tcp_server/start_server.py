@@ -1,5 +1,5 @@
 import os
-from socket import socket, timeout, AF_INET, SOCK_STREAM
+from socket import socket, AF_INET, SOCK_STREAM
 
 SEP = '\r\n'
 ERROR_MESSAGE = 'ERROR' + SEP
@@ -42,7 +42,8 @@ def download_initial_message(filename, total_length):
     return message
 
 
-def handle_file_reception(a_socket, an_address, filename, total_length, storage_dir):
+def handle_file_reception(a_socket,
+                          an_address, filename, total_length, storage_dir):
     try:
         path = storage_dir + '/' + filename
         file = open(path, 'wb')
@@ -121,6 +122,11 @@ def start_server(server_address, storage_dir):
             print('file_name', file_name)
             print('total_length', total_length)
 
-            handle_file_reception(connection_socket, client_address, file_name, total_length, storage_dir)
+            handle_file_reception(
+                connection_socket,
+                client_address,
+                file_name,
+                total_length,
+                storage_dir)
         else:  # Download
             handle_file_sending(connection_socket, file_name, storage_dir)

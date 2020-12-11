@@ -1,7 +1,8 @@
 import os
 from socket import socket, SOCK_DGRAM, AF_INET, timeout
 from common.common import add_header
-from constants.constants import MAX_TIMEOUTS, MAX_PACKET_SIZE, HEADER_SEP, TIMEOUT_SECONDS
+from constants.constants import \
+    MAX_TIMEOUTS, MAX_PACKET_SIZE, HEADER_SEP, TIMEOUT_SECONDS
 
 DATA_LENGTH = 1024
 
@@ -42,9 +43,10 @@ def upload_file(server_address, src, name):
     total_uploaded = 0
     while total_uploaded < total_length:
         print("")
-        print("Subidos: {} de {} [{}%]".format(total_uploaded,
-                                              total_length,
-                                              total_uploaded / total_length * 100))
+        print("Subidos: {} de {} [{}%]"
+              .format(total_uploaded,
+                      total_length,
+                      total_uploaded / total_length * 100))
         if not first_acked:
             to_send = initial_message(name, total_length).encode()
             data_length = 0

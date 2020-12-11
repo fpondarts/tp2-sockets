@@ -1,6 +1,4 @@
-import os
-from socket import socket, AF_INET, SOCK_STREAM, timeout
-from common.common import ack_message, add_header
+from socket import socket, AF_INET, SOCK_STREAM
 
 MAX_PACKET_SIZE = 4096
 SEP = '\r\n'
@@ -43,7 +41,8 @@ def download_file(server_address, name, dst):
     print("total_length", total_length)
 
     while total_received < total_length:
-        print("Porcentaje recibido: {}%".format(total_received / total_length * 100))
+        print("Porcentaje recibido: {}%"
+              .format(total_received / total_length * 100))
         data = client_socket.recv(MAX_PACKET_SIZE)
 
         f.write(data)

@@ -1,5 +1,5 @@
 import os
-from socket import socket, SOCK_STREAM, AF_INET, timeout
+from socket import socket, SOCK_STREAM, AF_INET
 
 MAX_PACKET_SIZE = 4096
 DATA_LENGTH = 1024
@@ -63,6 +63,5 @@ def upload_file(server_address, src, name):
         total_uploaded += data_length
 
         print('total_uploaded, total expected', total_uploaded, total_length)
-        print('--------------------------------------------------------------------------------------')
 
     client_socket.close()

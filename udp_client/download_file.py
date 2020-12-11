@@ -5,11 +5,6 @@ MAX_PACKET_SIZE = 4096
 SEP = '\r\n'
 
 
-def add_header(line, message):
-    message += line + SEP
-    return message
-
-
 def initial_message(filename):
     message = ""
     message = add_header('INIT DOWNLOAD', message)
@@ -28,7 +23,8 @@ def download_file(server_address, name, dst):
 
     while total_received < total_length:
         os.system('cls' if os.name == 'nt' else 'clear')
-        print("Porcentaje recibido: {}%".format(total_received / total_length * 100))
+        print("Porcentaje recibido: {}%".format(
+            total_received / total_length * 100))
         try:
             raw_received, sender_address = client_socket\
                 .recvfrom(MAX_PACKET_SIZE)
