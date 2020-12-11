@@ -11,27 +11,6 @@ def add_line(line, message):
     message += line + SEP
     return message
 
-
-def ack_message(filename, offset):
-    message = ''
-    message = add_line('ACK', message)
-    message = add_line(filename, message)
-    message = add_line(str(offset), message)
-    return message
-
-
-def download_message(file, filename, offset, total_length, max_data_length):
-    message = ''
-    message = add_line('DOWNLOAD', message)
-    message = add_line(filename, message)
-    message = add_line(str(offset), message)
-    message = add_line(str(total_length), message)
-    data = file.read(max_data_length)
-    message = add_line("DATA", message)
-    message = message.encode() + data
-    return message, len(data)
-
-
 def download_initial_message(filename, total_length):
     message = ''
     message = add_line('DOWNLOAD', message)
