@@ -1,6 +1,6 @@
 import os
 from socket import socket, SOCK_DGRAM, AF_INET, timeout
-from common.common import add_header
+from common.common import add_header, log
 from constants.constants import \
     MAX_TIMEOUTS, MAX_PACKET_SIZE, HEADER_SEP, TIMEOUT_SECONDS
 
@@ -27,7 +27,7 @@ def upload_message(name, offset, file):
     return message, len(data)
 
 
-def upload_file(server_address, src, name):
+def upload_file(server_address, src, name, verbose):
     print('UDP: upload_file({}, {}, {})'.format(server_address, src, name))
 
     if not os.path.isfile(src):
@@ -42,7 +42,6 @@ def upload_file(server_address, src, name):
     first_acked = False
     total_uploaded = 0
     while total_uploaded < total_length:
-        print("")
         print("Subidos: {} de {} [{}%]"
               .format(total_uploaded,
                       total_length,
@@ -59,6 +58,8 @@ def upload_file(server_address, src, name):
         timeouts = 0
         while not acked and timeouts < MAX_TIMEOUTS:
             if send_message:
+                log("Enviado paquete con offset {} y {} bytes de datos".
+                    format(total_uploaded - data_length, data_length), verbose)
                 client_socket.sendto(to_send, server_address)
             sender_address = None
             while sender_address != server_address:
@@ -68,13 +69,16 @@ def upload_file(server_address, src, name):
                 except timeout:
                     timeouts += 1
                     send_message = True
-                    print("Timeout {}".format(timeouts))
+                    log("Timeout nro {}".format(timeouts), verbose)
                     break
             if sender_address != server_address:
                 continue
             headers = raw_data.decode().split(HEADER_SEP)
             if headers[0] == 'ACK' and headers[1] == name:
                 send_message = False
+                log("Recibido ACK con offset {}".format(headers[2]), verbose)
                 if int(headers[2]) == total_uploaded:
                     first_acked = True
                     acked = True
+    print("Fin de transmisión")
+    f.close()

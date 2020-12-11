@@ -13,6 +13,7 @@ def parse_arguments():
     parser.add_argument("-n", "--name", help="el nombre que tomará el archivo en el servidor", required=True)
     parser.add_argument("-p", "--protocol", help="el protocolo a utilizar para la comunicación", default="tcp",
                         choices=['tcp', 'udp'])
+    parser.add_argument("-v", "--verbose", action='store_true')
 
     return parser.parse_args()
 
@@ -24,7 +25,7 @@ def main():
     if args.protocol == "tcp":
         upload_file_tcp(server_address, args.src, args.name)
     elif args.protocol == "udp":
-        upload_file_udp(server_address, args.src, args.name)
+        upload_file_udp(server_address, args.src, args.name, args.verbose)
     else:
         raise Exception("protocolo invalido")
 

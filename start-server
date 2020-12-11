@@ -15,6 +15,7 @@ def parse_arguments():
                         required=True)
     parser.add_argument("-p", "--protocol", help="el protocolo a utilizar para la comunicación", default="tcp",
                         choices=['tcp', 'udp'])
+    parser.add_argument("-v", "--verbose", action='store_true')
 
     return parser.parse_args()
 
@@ -26,7 +27,7 @@ def main():
     if args.protocol == "tcp":
         start_server_tcp(server_address, args.storage_dir)
     elif args.protocol == "udp":
-        start_server_udp(server_address, args.storage_dir)
+        start_server_udp(server_address, args.storage_dir, args.verbose)
     else:
         raise Exception("protocolo invalido")
 

@@ -2,7 +2,7 @@ import os
 from socket import socket, timeout, AF_INET, SOCK_DGRAM
 from constants.constants import HEADER_SEP, MAX_PACKET_SIZE, \
                       TIMEOUT_SECONDS, MAX_TIMEOUTS
-from common.common import add_header, ack_message
+from common.common import add_header, ack_message, log
 
 ERROR_MESSAGE = 'ERROR' + HEADER_SEP
 DATA_LENGTH = 1024
@@ -20,8 +20,8 @@ def download_message(file, filename, offset, total_length, max_data_length):
     return message, len(data)
 
 
-def handle_file_reception(a_socket,
-                          an_address, filename, total_length, storage_dir):
+def handle_file_reception(a_socket, an_address, filename,
+                          total_length, storage_dir, verbose):
     try:
         path = storage_dir + '/' + filename
         file = open(path, 'wb')
@@ -46,7 +46,7 @@ def handle_file_reception(a_socket,
                 raw_received, sender_address = a_socket.\
                     recvfrom(MAX_PACKET_SIZE)
             except timeout:
-                print("Timeout {}".format(timeouts))
+                log("Timeout {}".format(timeouts), verbose)
                 a_socket.sendto(ack_message(filename,
                                 total_received).encode(), an_address)
                 timeouts += 1
@@ -63,11 +63,14 @@ def handle_file_reception(a_socket,
             continue
         file.write(data)
         total_received += len(data)
+        log("Se envia ACK con offset {}".format(total_received), verbose)
         a_socket.sendto(ack_message(filename,
                         total_received).encode(), an_address)
+    print("Fin de recepción")
 
 
-def handle_file_sending(a_socket, an_address, filename, storage_dir):
+def handle_file_sending(a_socket, an_address,
+                        filename, storage_dir, verbose):
     a_socket.settimeout(TIMEOUT_SECONDS)
     path = storage_dir + '/' + filename
     if not os.path.isfile(path):
@@ -89,6 +92,8 @@ def handle_file_sending(a_socket, an_address, filename, storage_dir):
         send_message = True
         while (not acked and timeouts < MAX_TIMEOUTS):
             if send_message:
+                log("Se envia paquete con offset {} y {} bytes de datos"
+                    .format(total_sent - data_length, data_length), verbose)
                 a_socket.sendto(to_send, an_address)
             sender_address = None
             while sender_address != an_address:
@@ -96,6 +101,8 @@ def handle_file_sending(a_socket, an_address, filename, storage_dir):
                     raw_data, sender_address = a_socket.\
                         recvfrom(MAX_PACKET_SIZE)
                 except timeout:
+                    log("Timeout nro {}".format(timeouts),
+                        verbose)
                     send_message = True
                     timeouts += 1
                     break
@@ -106,14 +113,17 @@ def handle_file_sending(a_socket, an_address, filename, storage_dir):
             message = raw_data.decode().split(HEADER_SEP)
             if message[0] == 'ACK' and message[1] == filename:
                 send_message = False
+                log("Recibido ACK con offset {}".format(message[2]),
+                    verbose)
                 if int(message[2]) == total_sent:
                     acked = True
         if not acked:
             break
+    print("Fin de transmisión")
     f.close()
 
 
-def start_server(server_address, storage_dir):
+def start_server(server_address, storage_dir, verbose):
     print('UDP: start_server({}, {})'.format(server_address, storage_dir))
 
     if not os.path.isdir(storage_dir):
@@ -134,8 +144,12 @@ def start_server(server_address, storage_dir):
         total_length = 0
         if first_header == 'INIT UPLOAD':  # Upload
             total_length = int(headers[2])
+            print("Inicio de subida de archivo {}, por cliente {}"
+                  .format(file_name, client_address))
             handle_file_reception(server_socket, client_address, file_name,
-                                  total_length, storage_dir)
+                                  total_length, storage_dir, verbose)
         elif first_header == 'INIT DOWNLOAD':  # Download
-            handle_file_sending(server_socket,
-                                client_address, file_name, storage_dir)
+            print("Inicio de descarga de archivo {}, por cliente {}"
+                  .format(file_name, client_address))
+            handle_file_sending(server_socket, client_address,
+                                file_name, storage_dir, verbose)

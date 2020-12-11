@@ -13,6 +13,7 @@ def parse_arguments():
     parser.add_argument("-d", "--dst", help="path donde se guardará el archivo en el sistema", required=True)
     parser.add_argument("-p", "--protocol", help="el protocolo a utilizar para la comunicación", default="tcp",
                         choices=['tcp', 'udp'])
+    parser.add_argument("-v", "--verbose", action='store_true')
 
     return parser.parse_args()
 
@@ -24,7 +25,7 @@ def main():
     if args.protocol == "tcp":
         download_file_tcp(server_address, args.name, args.dst)
     elif args.protocol == "udp":
-        download_file_udp(server_address, args.name, args.dst)
+        download_file_udp(server_address, args.name, args.dst, args.verbose)
     else:
         raise Exception("protocolo invalido")
 

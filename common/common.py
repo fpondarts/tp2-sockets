@@ -12,3 +12,8 @@ def ack_message(filename, offset):
     message = add_header(filename, message)
     message = add_header(str(offset), message)
     return message
+
+
+def log(msj, verbose):
+    if (verbose):
+        print(msj)
