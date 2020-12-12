@@ -46,7 +46,7 @@ def handle_fin_receptor(a_socket, an_address, filename,
         log("Receptor recibe {}".format(raw_data), verbose)
         first_header = raw_data.split(bytes('DATA' + HEADER_SEP,
                                       encoding='utf-8'), 1)[0]\
-                               .decode()[0].split(HEADER_SEP)[0]
+                               .decode().split(HEADER_SEP)[0]
         if first_header == 'FIN':
             log("Receptor saliendo de FIN", verbose)
             a_socket.sendto(ack_message(filename, 'FIN').encode(), an_address)
