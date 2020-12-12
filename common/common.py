@@ -44,7 +44,9 @@ def handle_fin_receptor(a_socket, an_address, filename,
         if sender_address != an_address:
             continue
         log("Receptor recibe {}".format(raw_data), verbose)
-        first_header = raw_data.decode().split(HEADER_SEP)[0]
+        first_header = raw_data.split(bytes('DATA' + HEADER_SEP,
+                                      encoding='utf-8'), 1)[0]\
+                               .decode()[0].split(HEADER_SEP)[0]
         if first_header == 'FIN':
             log("Receptor saliendo de FIN", verbose)
             a_socket.sendto(ack_message(filename, 'FIN').encode(), an_address)
@@ -72,7 +74,9 @@ def handle_fin_emisor(a_socket, an_address, filename,
         if sender_address != an_address:
             continue
         log("Receptor emisor recibe {}".format(raw_data), verbose)
-        headers = raw_data.decode().split(HEADER_SEP)
+        headers = raw_data.split(bytes('DATA' + HEADER_SEP,
+                                 encoding='utf-8'), 1)[0]\
+                          .decode()[0].split(HEADER_SEP)
         if len(headers) >= 3:
             if headers[0] == 'ACK' and headers[1] == filename \
                                     and headers[2] == 'FIN':

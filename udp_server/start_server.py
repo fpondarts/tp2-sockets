@@ -23,14 +23,9 @@ def download_message(file, filename, offset, total_length, max_data_length):
 
 def handle_file_reception(a_socket, an_address, filename,
                           total_length, storage_dir, verbose):
-    try:
-        path = storage_dir + '/' + filename
-        file = open(path, 'wb')
-    except IOError:
-        error_message = ''
-        add_header('ERROR', error_message)
-        a_socket.sendto(error_message.encode(), an_address)
-        return
+
+    path = storage_dir + '/' + filename
+    file = open(path, 'wb')
 
     a_socket.settimeout(TIMEOUT_SECONDS)
     first_ack = ack_message(filename, 0)

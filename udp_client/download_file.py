@@ -65,7 +65,8 @@ def download_file(server_address, name, dst, verbose):
         print("Porcentaje recibido: {}%".format(
             total_received / total_length * 100))
 
-    handle_fin_receptor(client_socket, server_address, name,
-                        total_length, verbose)
+    if total_received == total_length:
+        handle_fin_receptor(client_socket, server_address, name,
+                            total_length, verbose)
     print("Fin de recepción")
     f.close()
