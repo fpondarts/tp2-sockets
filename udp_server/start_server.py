@@ -1,12 +1,25 @@
 import os
+import signal
 from socket import socket, timeout, AF_INET, SOCK_DGRAM
 from constants.constants import HEADER_SEP, MAX_PACKET_SIZE, \
-                      TIMEOUT_SECONDS, MAX_TIMEOUTS
+    TIMEOUT_SECONDS, MAX_TIMEOUTS
 from common.common import add_header, ack_message, log,\
     handle_fin_emisor, handle_fin_receptor
 
+server_socket = None
+
 ERROR_MESSAGE = 'ERROR' + HEADER_SEP
 DATA_LENGTH = 1024
+
+
+def signal_handler(_, __):
+    if server_socket is None:
+        exit(0)
+    server_socket.close()
+    exit(0)
+
+
+signal.signal(signal.SIGINT, signal_handler)
 
 
 def download_message(file, filename, offset, total_length, max_data_length):
@@ -44,7 +57,8 @@ def handle_file_reception(a_socket, an_address, filename,
             except timeout:
                 log("Timeout {}".format(timeouts), verbose)
                 a_socket.sendto(ack_message(filename,
-                                total_received).encode(), an_address)
+                                            total_received
+                                            ).encode(), an_address)
                 timeouts += 1
 
         headers_and_data = raw_received.split(bytes('DATA' + HEADER_SEP,
@@ -55,13 +69,13 @@ def handle_file_reception(a_socket, an_address, filename,
 
         if offset != total_received:
             a_socket.sendto(ack_message(filename,
-                            total_received).encode(), an_address)
+                                        total_received).encode(), an_address)
             continue
         file.write(data)
         total_received += len(data)
         log("Se envia ACK con offset {}".format(total_received), verbose)
         a_socket.sendto(ack_message(filename,
-                        total_received).encode(), an_address)
+                                    total_received).encode(), an_address)
     handle_fin_receptor(a_socket, an_address, filename, total_length, verbose)
     print("Fin de recepción")
 
@@ -126,6 +140,8 @@ def start_server(server_address, storage_dir, verbose):
 
     if not os.path.isdir(storage_dir):
         os.makedirs(storage_dir)
+
+    global server_socket
 
     server_socket = socket(AF_INET, SOCK_DGRAM)
     server_socket.bind(server_address)

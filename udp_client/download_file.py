@@ -1,7 +1,22 @@
 from socket import socket, AF_INET, SOCK_DGRAM, timeout
 from common.common import ack_message, add_header, log, handle_fin_receptor
+import signal
+
 MAX_PACKET_SIZE = 4096
 SEP = '\r\n'
+
+client_socket = None
+
+
+def signal_handler(_, __):
+    if client_socket is None:
+        exit(0)
+    client_socket.close()
+
+    exit(0)
+
+
+signal.signal(signal.SIGINT, signal_handler)
 
 
 def initial_message(filename):
@@ -13,6 +28,8 @@ def initial_message(filename):
 
 def download_file(server_address, name, dst, verbose):
     print('UDP: download_file({}, {}, {})'.format(server_address, name, dst))
+    global client_socket
+
     client_socket = socket(AF_INET, SOCK_DGRAM)
     f = open(dst, 'wb')
     total_length = int(1e10)  # Muy alto

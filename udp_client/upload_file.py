@@ -1,10 +1,23 @@
 import os
+import signal
 from socket import socket, SOCK_DGRAM, AF_INET, timeout
 from common.common import add_header, log, handle_fin_emisor
 from constants.constants import \
     MAX_TIMEOUTS, MAX_PACKET_SIZE, HEADER_SEP, TIMEOUT_SECONDS
 
 DATA_LENGTH = 1024
+client_socket = None
+
+
+def signal_handler(_, __):
+    if client_socket is None:
+        exit(0)
+    client_socket.close()
+
+    exit(0)
+
+
+signal.signal(signal.SIGINT, signal_handler)
 
 
 def initial_message(name, length):
@@ -33,6 +46,8 @@ def upload_file(server_address, src, name, verbose):
     if not os.path.isfile(src):
         print("Error: el archivo no existe")
         return
+
+    global client_socket
 
     client_socket = socket(AF_INET, SOCK_DGRAM)
     client_socket.settimeout(TIMEOUT_SECONDS)
